@@ -12,6 +12,9 @@ flutter:
         pluginClass: WifiIotPlugin
       ios:
         pluginClass: WifiIotPlugin
+      ohos:
+        package: com.alternadom.wifiiot
+        pluginClass: WifiIotPlugin
 
 environment:
   sdk: '>=2.12.0 <3.0.0'
