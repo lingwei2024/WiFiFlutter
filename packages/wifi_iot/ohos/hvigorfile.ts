@@ -1,7 +1,7 @@
-import path from 'path';
-import { appTasks } from '@ohos/hvigor-ohos-plugin';
+// Script for compiling build behavior. It is built in the build plug-in and cannot be modified currently.
+import { harTasks } from '@ohos/hvigor-ohos-plugin';
 
 export default {
-    system: appTasks, // 内置系统插件，必须存在
-    plugins: []       // 自定义插件可以为空
-};
+    system: harTasks,  /* Built-in plugin of Hvigor. It cannot be modified. */
+    plugins:[]         /* Custom plugin to extend the functionality of Hvigor. */
+}
