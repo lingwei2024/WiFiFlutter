@@ -11,6 +11,7 @@ import android.net.ConnectivityManager;
 import android.net.MacAddress;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
 import android.net.NetworkRequest;
 import android.net.wifi.ScanResult;
 import android.net.wifi.SoftApConfiguration;
@@ -50,11 +51,12 @@ import org.json.JSONObject;
 /** WifiIotPlugin */
 public class WifiIotPlugin
     implements FlutterPlugin,
-        ActivityAware,
-        MethodCallHandler,
-        EventChannel.StreamHandler,
-        PluginRegistry.RequestPermissionsResultListener {
-  /// This local reference serves to register the plugin with the Flutter Engine and unregister it
+    ActivityAware,
+    MethodCallHandler,
+    EventChannel.StreamHandler,
+    PluginRegistry.RequestPermissionsResultListener {
+  /// This local reference serves to register the plugin with the Flutter Engine
+  /// and unregister it
   /// when the Flutter Engine is detached from the Activity
   private MethodChannel channel;
   private EventChannel eventChannel;
@@ -78,8 +80,7 @@ public class WifiIotPlugin
   private ArrayList<Object> permissionRequestCookie = new ArrayList<>();
   private static final int PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION_LOAD_WIFI_LIST = 65655435;
   private static final int PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION_ON_LISTEN = 65655436;
-  private static final int PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION_FIND_AND_CONNECT =
-      65655437;
+  private static final int PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION_FIND_AND_CONNECT = 65655437;
   private static final int PERMISSIONS_REQUEST_CODE_ACCESS_NETWORK_STATE_IS_CONNECTED = 65655438;
 
   // initialize members of this class with Context
@@ -122,8 +123,7 @@ public class WifiIotPlugin
   public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
     // initialize method and event channel and set handlers
     channel = new MethodChannel(binding.getBinaryMessenger(), "wifi_iot");
-    eventChannel =
-        new EventChannel(binding.getBinaryMessenger(), "plugins.wififlutter.io/wifi_scan");
+    eventChannel = new EventChannel(binding.getBinaryMessenger(), "plugins.wififlutter.io/wifi_scan");
     channel.setMethodCallHandler(this);
     eventChannel.setStreamHandler(this);
 
@@ -170,8 +170,8 @@ public class WifiIotPlugin
   @Override
   public boolean onRequestPermissionsResult(
       int requestCode, String[] permissions, int[] grantResults) {
-    final boolean wasPermissionGranted =
-        grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+    final boolean wasPermissionGranted = grantResults.length > 0
+        && grantResults[0] == PackageManager.PERMISSION_GRANTED;
     switch (requestCode) {
       case PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION_LOAD_WIFI_LIST:
         if (wasPermissionGranted) {
@@ -185,8 +185,7 @@ public class WifiIotPlugin
 
       case PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION_ON_LISTEN:
         if (wasPermissionGranted) {
-          final EventChannel.EventSink eventSink =
-              (EventChannel.EventSink) permissionRequestCookie.get(0);
+          final EventChannel.EventSink eventSink = (EventChannel.EventSink) permissionRequestCookie.get(0);
           _onListen(eventSink);
         }
         requestingPermission = false;
@@ -314,8 +313,10 @@ public class WifiIotPlugin
   }
 
   /**
-   * The network's SSID. Can either be an ASCII string, which must be enclosed in double quotation
-   * marks (e.g., {@code "MyNetwork"}), or a string of hex digits, which are not enclosed in quotes
+   * The network's SSID. Can either be an ASCII string, which must be enclosed in
+   * double quotation
+   * marks (e.g., {@code "MyNetwork"}), or a string of hex digits, which are not
+   * enclosed in quotes
    * (e.g., {@code 01a243f405}).
    */
   private void getWiFiAPSSID(Result poResult) {
@@ -370,7 +371,8 @@ public class WifiIotPlugin
   }
 
   /**
-   * This is a network that does not broadcast its SSID, so an SSID-specific probe request must be
+   * This is a network that does not broadcast its SSID, so an SSID-specific probe
+   * request must be
    * used for scans.
    */
   private void isSSIDHidden(Result poResult) {
@@ -425,10 +427,14 @@ public class WifiIotPlugin
   }
 
   /**
-   * Pre-shared key for use with WPA-PSK. Either an ASCII string enclosed in double quotation marks
-   * (e.g., {@code "abcdefghij"} for PSK passphrase or a string of 64 hex digits for raw PSK.
+   * Pre-shared key for use with WPA-PSK. Either an ASCII string enclosed in
+   * double quotation marks
+   * (e.g., {@code "abcdefghij"} for PSK passphrase or a string of 64 hex digits
+   * for raw PSK.
    *
-   * <p>When the value of this key is read, the actual key is not returned, just a "*" if the key
+   * <p>
+   * When the value of this key is read, the actual key is not returned, just a
+   * "*" if the key
    * has a value, or the null string otherwise.
    */
   private void getWiFiAPPreSharedKey(Result poResult) {
@@ -483,9 +489,12 @@ public class WifiIotPlugin
   }
 
   /**
-   * Gets a list of the clients connected to the Hotspot *** getClientList : param onlyReachables
-   * {@code false} if the list should contain unreachable (probably disconnected) clients, {@code
-   * true} otherwise param reachableTimeout Reachable Timout in miliseconds, 300 is default param
+   * Gets a list of the clients connected to the Hotspot *** getClientList : param
+   * onlyReachables
+   * {@code false} if the list should contain unreachable (probably disconnected)
+   * clients, {@code
+   * true} otherwise param reachableTimeout Reachable Timout in miliseconds, 300
+   * is default param
    * finishListener, Interface called when the scan method finishes
    */
   private void getClientList(MethodCall poCall, final Result poResult) {
@@ -500,41 +509,40 @@ public class WifiIotPlugin
     }
 
     final Boolean finalOnlyReachables = onlyReachables;
-    FinishScanListener oFinishScanListener =
-        new FinishScanListener() {
-          @Override
-          public void onFinishScan(final ArrayList<ClientScanResult> clients) {
-            try {
-              JSONArray clientArray = new JSONArray();
+    FinishScanListener oFinishScanListener = new FinishScanListener() {
+      @Override
+      public void onFinishScan(final ArrayList<ClientScanResult> clients) {
+        try {
+          JSONArray clientArray = new JSONArray();
 
-              for (ClientScanResult client : clients) {
-                JSONObject clientObject = new JSONObject();
+          for (ClientScanResult client : clients) {
+            JSONObject clientObject = new JSONObject();
 
-                Boolean clientIsReachable = client.isReachable();
-                Boolean shouldReturnCurrentClient = true;
-                if (finalOnlyReachables.booleanValue()) {
-                  if (!clientIsReachable.booleanValue()) {
-                    shouldReturnCurrentClient = Boolean.valueOf(false);
-                  }
-                }
-                if (shouldReturnCurrentClient.booleanValue()) {
-                  try {
-                    clientObject.put("IPAddr", client.getIpAddr());
-                    clientObject.put("HWAddr", client.getHWAddr());
-                    clientObject.put("Device", client.getDevice());
-                    clientObject.put("isReachable", client.isReachable());
-                  } catch (JSONException e) {
-                    poResult.error("Exception", e.getMessage(), null);
-                  }
-                  clientArray.put(clientObject);
-                }
+            Boolean clientIsReachable = client.isReachable();
+            Boolean shouldReturnCurrentClient = true;
+            if (finalOnlyReachables.booleanValue()) {
+              if (!clientIsReachable.booleanValue()) {
+                shouldReturnCurrentClient = Boolean.valueOf(false);
               }
-              poResult.success(clientArray.toString());
-            } catch (Exception e) {
-              poResult.error("Exception", e.getMessage(), null);
+            }
+            if (shouldReturnCurrentClient.booleanValue()) {
+              try {
+                clientObject.put("IPAddr", client.getIpAddr());
+                clientObject.put("HWAddr", client.getHWAddr());
+                clientObject.put("Device", client.getDevice());
+                clientObject.put("isReachable", client.isReachable());
+              } catch (JSONException e) {
+                poResult.error("Exception", e.getMessage(), null);
+              }
+              clientArray.put(clientObject);
             }
           }
-        };
+          poResult.success(clientArray.toString());
+        } catch (Exception e) {
+          poResult.error("Exception", e.getMessage(), null);
+        }
+      }
+    };
 
     if (reachableTimeout != null) {
       moWiFiAPManager.getClientList(onlyReachables, reachableTimeout, oFinishScanListener);
@@ -544,7 +552,8 @@ public class WifiIotPlugin
   }
 
   /**
-   * Return whether Wi-Fi AP is enabled or disabled. *** isWifiApEnabled : return {@code true} if
+   * Return whether Wi-Fi AP is enabled or disabled. *** isWifiApEnabled : return
+   * {@code true} if
    * Wi-Fi AP is enabled
    */
   private void isWiFiAPEnabled(Result poResult) {
@@ -562,16 +571,22 @@ public class WifiIotPlugin
   }
 
   /**
-   * Start AccessPoint mode with the specified configuration. If the radio is already running in AP
-   * mode, update the new configuration Note that starting in access point mode disables station
-   * mode operation *** setWifiApEnabled : param wifiConfig SSID, security and channel details as
-   * part of WifiConfiguration return {@code true} if the operation succeeds, {@code false}
+   * Start AccessPoint mode with the specified configuration. If the radio is
+   * already running in AP
+   * mode, update the new configuration Note that starting in access point mode
+   * disables station
+   * mode operation *** setWifiApEnabled : param wifiConfig SSID, security and
+   * channel details as
+   * part of WifiConfiguration return {@code true} if the operation succeeds,
+   * {@code false}
    * otherwise
    */
   private void setWiFiAPEnabled(MethodCall poCall, final Result poResult) {
     boolean enabled = poCall.argument("state");
 
-    /** Using LocalOnlyHotspotCallback when setting WiFi AP state on API level >= 29 */
+    /**
+     * Using LocalOnlyHotspotCallback when setting WiFi AP state on API level >= 29
+     */
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
       final boolean result = moWiFiAPManager.setWifiApEnabled(null, enabled);
       poResult.success(result);
@@ -631,10 +646,14 @@ public class WifiIotPlugin
   }
 
   /**
-   * Show write permission settings page to user Depending on Android version and application these
-   * may be needed to perform certain WiFi configurations that require WRITE_SETTINGS which require
-   * a double opt-in, not just presence in manifest. *** showWritePermissionSettings : param boolean
-   * force, if true shows always, if false only if permissions are not already granted
+   * Show write permission settings page to user Depending on Android version and
+   * application these
+   * may be needed to perform certain WiFi configurations that require
+   * WRITE_SETTINGS which require
+   * a double opt-in, not just presence in manifest. ***
+   * showWritePermissionSettings : param boolean
+   * force, if true shows always, if false only if permissions are not already
+   * granted
    */
   private void showWritePermissionSettings(MethodCall poCall, Result poResult) {
     boolean force = poCall.argument("force");
@@ -642,7 +661,10 @@ public class WifiIotPlugin
     poResult.success(null);
   }
 
-  /** Gets the Wi-Fi enabled state. *** getWifiApState : return {link WIFI_AP_STATE} */
+  /**
+   * Gets the Wi-Fi enabled state. *** getWifiApState : return {link
+   * WIFI_AP_STATE}
+   */
   private void getWiFiAPState(Result poResult) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
       poResult.success(moWiFiAPManager.getWifiApState().ordinal());
@@ -654,8 +676,8 @@ public class WifiIotPlugin
   @Override
   public void onListen(Object o, EventChannel.EventSink eventSink) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-        && moContext.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED) {
+        && moContext
+            .checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
       if (requestingPermission) {
         return;
       }
@@ -663,7 +685,7 @@ public class WifiIotPlugin
       permissionRequestCookie.clear();
       permissionRequestCookie.add(eventSink);
       moActivity.requestPermissions(
-          new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
+          new String[] { Manifest.permission.ACCESS_FINE_LOCATION },
           PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION_ON_LISTEN);
       // actual call will be handled in [onRequestPermissionsResult]
     } else {
@@ -714,11 +736,11 @@ public class WifiIotPlugin
             wifiObject.put("timestamp", 0);
           }
           /// Other fields not added
-          //wifiObject.put("operatorFriendlyName", result.operatorFriendlyName);
-          //wifiObject.put("venueName", result.venueName);
-          //wifiObject.put("centerFreq0", result.centerFreq0);
-          //wifiObject.put("centerFreq1", result.centerFreq1);
-          //wifiObject.put("channelWidth", result.channelWidth);
+          // wifiObject.put("operatorFriendlyName", result.operatorFriendlyName);
+          // wifiObject.put("venueName", result.venueName);
+          // wifiObject.put("centerFreq0", result.centerFreq0);
+          // wifiObject.put("centerFreq1", result.centerFreq1);
+          // wifiObject.put("channelWidth", result.channelWidth);
 
           wifiArray.put(wifiObject);
         }
@@ -730,11 +752,12 @@ public class WifiIotPlugin
     }
   }
 
-  /// Method to load wifi list into string via Callback. Returns a stringified JSONArray
+  /// Method to load wifi list into string via Callback. Returns a stringified
+  /// JSONArray
   private void loadWifiList(final Result poResult) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-        && moContext.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED) {
+        && moContext
+            .checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
       if (requestingPermission) {
         poResult.error(
             "WifiIotPlugin.Permission", "Only one permission can be requested at a time", null);
@@ -743,7 +766,7 @@ public class WifiIotPlugin
       requestingPermission = true;
       permissionRequestResultCallback = poResult;
       moActivity.requestPermissions(
-          new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
+          new String[] { Manifest.permission.ACCESS_FINE_LOCATION },
           PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION_LOAD_WIFI_LIST);
       // actual call will be handled in [onRequestPermissionsResult]
     } else {
@@ -792,47 +815,150 @@ public class WifiIotPlugin
   private void forceWifiUsage(final MethodCall poCall, final Result poResult) {
     boolean useWifi = poCall.argument("useWifi");
 
-    final ConnectivityManager manager =
-        (ConnectivityManager) moContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+    final ConnectivityManager manager = (ConnectivityManager) moContext.getSystemService(Context.CONNECTIVITY_SERVICE);
 
     boolean success = true;
     boolean shouldReply = true;
+
     if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP && manager != null) {
       if (useWifi) {
-        // SDK-31 If not previously in a disconnected state, select the joinedNetwork to ensure
-        // the correct network is used for communications, else fallback to network manager network.
-        // https://developer.android.com/about/versions/12/behavior-changes-12#concurrent-connections
-        if (joinedNetwork != null) {
-          success = selectNetwork(joinedNetwork, manager);
-        } else {
-          NetworkRequest.Builder builder;
-          builder = new NetworkRequest.Builder();
-          /// set the transport type do WIFI
-          builder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
-          shouldReply = false;
-          manager.requestNetwork(
-              builder.build(),
-              new ConnectivityManager.NetworkCallback() {
-                @Override
-                public void onAvailable(Network network) {
-                  super.onAvailable(network);
-                  manager.unregisterNetworkCallback(this);
-                  onAvailableNetwork(manager, network, poResult);
-                }
-              });
-        }
+        // Try multiple approaches for better compatibility across different Android
+        // versions and OEMs
+        success = forceWifiUsageWithFallback(manager, poResult);
+        shouldReply = false; // Will be handled by callback or fallback
       } else {
         success = selectNetwork(null, manager);
       }
     }
+
     if (shouldReply) {
       poResult.success(success);
     }
   }
 
+  /// Enhanced method with multiple fallback strategies for better OEM
+  /// compatibility
+  private boolean forceWifiUsageWithFallback(final ConnectivityManager manager, final Result poResult) {
+    // Strategy 1: Use existing joined network if available (most reliable)
+    if (joinedNetwork != null) {
+      boolean success = selectNetwork(joinedNetwork, manager);
+      Log.d(WifiIotPlugin.class.getSimpleName(), "Using existing joined network: " + success);
+      poResult.success(success);
+      return success;
+    }
+
+    // Strategy 2: Find current WiFi network and bind to it
+    Network currentWifiNetwork = getCurrentWifiNetwork(manager);
+    if (currentWifiNetwork != null) {
+      boolean success = selectNetwork(currentWifiNetwork, manager);
+      Log.d(WifiIotPlugin.class.getSimpleName(), "Using current WiFi network: " + success);
+      poResult.success(success);
+      return success;
+    }
+
+    // Strategy 3: Request WiFi network with timeout (fallback for Samsung and other
+    // OEMs)
+    requestWifiNetworkWithTimeout(manager, poResult);
+    return true; // Will be handled by callback
+  }
+
+  /// Get the currently connected WiFi network
+  private Network getCurrentWifiNetwork(ConnectivityManager manager) {
+    try {
+      Network[] networks = manager.getAllNetworks();
+      for (Network network : networks) {
+        NetworkCapabilities capabilities = manager.getNetworkCapabilities(network);
+        if (capabilities != null && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+          // Additional check for Samsung devices - ensure network is actually connected
+          NetworkInfo networkInfo = manager.getNetworkInfo(network);
+          if (networkInfo != null && networkInfo.isConnected()) {
+            Log.d(WifiIotPlugin.class.getSimpleName(), "Found connected WiFi network");
+            return network;
+          }
+        }
+      }
+    } catch (Exception e) {
+      Log.e(WifiIotPlugin.class.getSimpleName(), "Error finding current WiFi network", e);
+    }
+    return null;
+  }
+
   /// Method to check if wifi is enabled
   private void isEnabled(Result poResult) {
     poResult.success(moWiFi.isWifiEnabled());
+  }
+
+  /// Request WiFi network with enhanced timeout and retry logic
+  private void requestWifiNetworkWithTimeout(final ConnectivityManager manager, final Result poResult) {
+    NetworkRequest.Builder builder = new NetworkRequest.Builder();
+    builder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
+
+    // For Samsung and other OEMs, be more specific about network requirements
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      builder.addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED);
+    }
+
+    final Handler timeoutHandler = new Handler(Looper.getMainLooper());
+    final boolean[] callbackHandled = { false };
+
+    ConnectivityManager.NetworkCallback callback = new ConnectivityManager.NetworkCallback() {
+      @Override
+      public void onAvailable(Network network) {
+        super.onAvailable(network);
+        if (!callbackHandled[0]) {
+          callbackHandled[0] = true;
+          manager.unregisterNetworkCallback(this);
+          timeoutHandler.removeCallbacksAndMessages(null);
+
+          boolean success = selectNetwork(network, manager);
+          Log.d(WifiIotPlugin.class.getSimpleName(), "Network request callback success: " + success);
+          poResult.success(success);
+        }
+      }
+
+      @Override
+      public void onUnavailable() {
+        super.onUnavailable();
+        if (!callbackHandled[0]) {
+          callbackHandled[0] = true;
+          timeoutHandler.removeCallbacksAndMessages(null);
+          Log.w(WifiIotPlugin.class.getSimpleName(), "Network request unavailable, trying alternative approach");
+
+          // Fallback: Try to use any available WiFi network
+          Network fallbackNetwork = getCurrentWifiNetwork(manager);
+          boolean success = fallbackNetwork != null && selectNetwork(fallbackNetwork, manager);
+          poResult.success(success);
+        }
+      }
+    };
+
+    // Set timeout for Samsung and other problematic devices
+    timeoutHandler.postDelayed(new Runnable() {
+      @Override
+      public void run() {
+        if (!callbackHandled[0]) {
+          callbackHandled[0] = true;
+          manager.unregisterNetworkCallback(callback);
+          Log.w(WifiIotPlugin.class.getSimpleName(), "Network request timeout, using fallback");
+
+          // Final fallback: Try to bind to any available WiFi network
+          Network fallbackNetwork = getCurrentWifiNetwork(manager);
+          boolean success = fallbackNetwork != null && selectNetwork(fallbackNetwork, manager);
+          poResult.success(success);
+        }
+      }
+    }, 5000); // 5 second timeout
+
+    try {
+      manager.requestNetwork(builder.build(), callback);
+    } catch (Exception e) {
+      Log.e(WifiIotPlugin.class.getSimpleName(), "Failed to request network", e);
+      if (!callbackHandled[0]) {
+        callbackHandled[0] = true;
+        timeoutHandler.removeCallbacksAndMessages(null);
+        poResult.success(false);
+      }
+    }
   }
 
   /// Method to connect/disconnect wifi service
@@ -909,10 +1035,14 @@ public class WifiIotPlugin
   }
 
   /**
-   * Registers a wifi network in the device wireless networks For API >= 30 uses intent to
-   * permanently store such network in user configuration For API <= 29 uses deprecated functions
-   * that manipulate directly *** registerWifiNetwork : param ssid, SSID to register param password,
-   * passphrase to use param security, security mode (WPA or null) to use return {@code true} if the
+   * Registers a wifi network in the device wireless networks For API >= 30 uses
+   * intent to
+   * permanently store such network in user configuration For API <= 29 uses
+   * deprecated functions
+   * that manipulate directly *** registerWifiNetwork : param ssid, SSID to
+   * register param password,
+   * passphrase to use param security, security mode (WPA or null) to use return
+   * {@code true} if the
    * operation succeeds, {@code false} otherwise
    */
   private void registerWifiNetwork(final MethodCall poCall, final Result poResult) {
@@ -944,8 +1074,7 @@ public class WifiIotPlugin
         return;
       }
 
-      final ArrayList<WifiNetworkSuggestion> suggestionsList =
-          new ArrayList<WifiNetworkSuggestion>();
+      final ArrayList<WifiNetworkSuggestion> suggestionsList = new ArrayList<WifiNetworkSuggestion>();
       suggestionsList.add(suggestedNet.build());
 
       Bundle bundle = new Bundle();
@@ -959,8 +1088,7 @@ public class WifiIotPlugin
       poResult.success(null);
     } else {
       // Deprecated version
-      android.net.wifi.WifiConfiguration conf =
-          generateConfiguration(ssid, bssid, password, security, isHidden);
+      android.net.wifi.WifiConfiguration conf = generateConfiguration(ssid, bssid, password, security, isHidden);
 
       int updateNetwork = registerWifiNetworkDeprecated(conf);
 
@@ -972,14 +1100,15 @@ public class WifiIotPlugin
     }
   }
 
-  /// Send the ssid and password of a Wifi network into this to connect to the network.
-  /// Example:  wifi.findAndConnect(ssid, password);
+  /// Send the ssid and password of a Wifi network into this to connect to the
+  /// network.
+  /// Example: wifi.findAndConnect(ssid, password);
   /// After 10 seconds, a post telling you whether you are connected will pop up.
   /// Callback returns true if ssid is in the range
   private void findAndConnect(final MethodCall poCall, final Result poResult) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-        && moContext.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED) {
+        && moContext
+            .checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
       if (requestingPermission) {
         poResult.error(
             "WifiIotPlugin.Permission", "Only one permission can be requested at a time", null);
@@ -990,7 +1119,7 @@ public class WifiIotPlugin
       permissionRequestCookie.clear();
       permissionRequestCookie.add(poCall);
       moActivity.requestPermissions(
-          new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
+          new String[] { Manifest.permission.ACCESS_FINE_LOCATION },
           PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION_FIND_AND_CONNECT);
       // actual call will be handled in [onRequestPermissionsResult]
     } else {
@@ -1008,18 +1137,59 @@ public class WifiIotPlugin
         Boolean withInternet = poCall.argument("with_internet");
         Integer timeoutInSeconds = poCall.argument("timeout_in_seconds");
 
+        Log.d(WifiIotPlugin.class.getSimpleName(), "=== _findAndConnect START ===");
+        Log.d(WifiIotPlugin.class.getSimpleName(), "Target SSID: " + ssid);
+        Log.d(WifiIotPlugin.class.getSimpleName(), "Target BSSID: " + bssid);
+        Log.d(WifiIotPlugin.class.getSimpleName(), "Password provided: " + (password != null && !password.isEmpty()));
+        Log.d(WifiIotPlugin.class.getSimpleName(), "Join once: " + joinOnce);
+        Log.d(WifiIotPlugin.class.getSimpleName(), "With internet: " + withInternet);
+        Log.d(WifiIotPlugin.class.getSimpleName(), "Timeout: " + timeoutInSeconds + " seconds");
+
         String security = null;
         List<ScanResult> results = moWiFi.getScanResults();
-        for (ScanResult result : results) {
-          String resultString = "" + result.SSID;
-          if (ssid.equals(resultString)
-              && (result.BSSID == null || bssid == null || result.BSSID.equals(bssid))) {
-            security = getSecurityType(result);
-            if (bssid == null) {
-              bssid = result.BSSID;
+        Log.d(WifiIotPlugin.class.getSimpleName(),
+            "WiFi scan results count: " + (results != null ? results.size() : 0));
+
+        boolean networkFound = false;
+        if (results != null) {
+          for (int i = 0; i < results.size(); i++) {
+            ScanResult result = results.get(i);
+            String resultString = "" + result.SSID;
+            Log.d(WifiIotPlugin.class.getSimpleName(), "Scan result [" + i + "]: SSID='" + resultString + "', BSSID="
+                + result.BSSID + ", capabilities=" + result.capabilities);
+
+            if (ssid.equals(resultString)
+                && (result.BSSID == null || bssid == null || result.BSSID.equals(bssid))) {
+              networkFound = true;
+              security = getSecurityType(result);
+              Log.d(WifiIotPlugin.class.getSimpleName(), "*** NETWORK FOUND ***");
+              Log.d(WifiIotPlugin.class.getSimpleName(),
+                  "Matched network - SSID: " + resultString + ", BSSID: " + result.BSSID);
+              Log.d(WifiIotPlugin.class.getSimpleName(), "Security type detected: " + security);
+              Log.d(WifiIotPlugin.class.getSimpleName(), "Network capabilities: " + result.capabilities);
+
+              if (bssid == null) {
+                bssid = result.BSSID;
+                Log.d(WifiIotPlugin.class.getSimpleName(), "BSSID updated to: " + bssid);
+              }
+              break;
             }
           }
         }
+
+        if (!networkFound) {
+          Log.w(WifiIotPlugin.class.getSimpleName(), "*** NETWORK NOT FOUND ***");
+          Log.w(WifiIotPlugin.class.getSimpleName(), "Target SSID '" + ssid + "' not found in scan results");
+          if (bssid != null) {
+            Log.w(WifiIotPlugin.class.getSimpleName(), "Target BSSID: " + bssid);
+          }
+        }
+
+        Log.d(WifiIotPlugin.class.getSimpleName(), "Final connection parameters:");
+        Log.d(WifiIotPlugin.class.getSimpleName(), "  SSID: " + ssid);
+        Log.d(WifiIotPlugin.class.getSimpleName(), "  BSSID: " + bssid);
+        Log.d(WifiIotPlugin.class.getSimpleName(), "  Security: " + security);
+        Log.d(WifiIotPlugin.class.getSimpleName(), "Calling connectTo method...");
 
         connectTo(
             poResult,
@@ -1037,14 +1207,18 @@ public class WifiIotPlugin
 
   private static String getSecurityType(ScanResult scanResult) {
     String capabilities = scanResult.capabilities;
+    Log.d(WifiIotPlugin.class.getSimpleName(), "getSecurityType - analyzing capabilities: " + capabilities);
 
     if (capabilities.contains("WPA")
         || capabilities.contains("WPA2")
         || capabilities.contains("WPA/WPA2 PSK")) {
+      Log.d(WifiIotPlugin.class.getSimpleName(), "getSecurityType - detected WPA security");
       return "WPA";
     } else if (capabilities.contains("WEP")) {
+      Log.d(WifiIotPlugin.class.getSimpleName(), "getSecurityType - detected WEP security");
       return "WEP";
     } else {
+      Log.d(WifiIotPlugin.class.getSimpleName(), "getSecurityType - no security detected (open network)");
       return null;
     }
   }
@@ -1054,8 +1228,8 @@ public class WifiIotPlugin
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       isConnectedDeprecated(poResult);
     } else {
-      if (moContext.checkSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-          != PackageManager.PERMISSION_GRANTED) {
+      if (moContext
+          .checkSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED) {
         if (requestingPermission) {
           poResult.error(
               "WifiIotPlugin.Permission", "Only one permission can be requested at a time", null);
@@ -1064,7 +1238,7 @@ public class WifiIotPlugin
         requestingPermission = true;
         permissionRequestResultCallback = poResult;
         moActivity.requestPermissions(
-            new String[] {Manifest.permission.ACCESS_NETWORK_STATE},
+            new String[] { Manifest.permission.ACCESS_NETWORK_STATE },
             PERMISSIONS_REQUEST_CODE_ACCESS_NETWORK_STATE_IS_CONNECTED);
         // actual call will be handled in [onRequestPermissionsResult]
       } else {
@@ -1074,17 +1248,15 @@ public class WifiIotPlugin
   }
 
   private void _isConnected(Result poResult) {
-    ConnectivityManager connManager =
-        (ConnectivityManager) moContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+    ConnectivityManager connManager = (ConnectivityManager) moContext.getSystemService(Context.CONNECTIVITY_SERVICE);
     boolean result = false;
     if (connManager != null) {
       // `connManager.getActiveNetwork` only return if the network has internet
       // therefore using `connManager.getAllNetworks()` to check all networks
       for (final Network network : connManager.getAllNetworks()) {
-        final NetworkCapabilities capabilities =
-            network != null ? connManager.getNetworkCapabilities(network) : null;
-        final boolean isConnected =
-            capabilities != null && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+        final NetworkCapabilities capabilities = network != null ? connManager.getNetworkCapabilities(network) : null;
+        final boolean isConnected = capabilities != null
+            && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
         if (isConnected) {
           result = true;
           break;
@@ -1097,10 +1269,9 @@ public class WifiIotPlugin
 
   @SuppressWarnings("deprecation")
   private void isConnectedDeprecated(Result poResult) {
-    ConnectivityManager connManager =
-        (ConnectivityManager) moContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-    android.net.NetworkInfo mWifi =
-        connManager != null ? connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI) : null;
+    ConnectivityManager connManager = (ConnectivityManager) moContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+    android.net.NetworkInfo mWifi = connManager != null ? connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI)
+        : null;
 
     poResult.success(mWifi != null && mWifi.isConnected());
   }
@@ -1109,12 +1280,12 @@ public class WifiIotPlugin
   private void disconnect(Result poResult) {
     boolean disconnected = false;
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-      //noinspection deprecation
+      // noinspection deprecation
       disconnected = moWiFi.disconnect();
     } else {
       if (networkCallback != null) {
-        final ConnectivityManager connectivityManager =
-            (ConnectivityManager) moContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        final ConnectivityManager connectivityManager = (ConnectivityManager) moContext
+            .getSystemService(Context.CONNECTIVITY_SERVICE);
         connectivityManager.unregisterNetworkCallback(networkCallback);
         networkCallback = null;
         disconnected = true;
@@ -1144,7 +1315,8 @@ public class WifiIotPlugin
     poResult.success(ssid);
   }
 
-  /// This method will return the basic service set identifier (BSSID) of the current access point
+  /// This method will return the basic service set identifier (BSSID) of the
+  /// current access point
   private void getBSSID(Result poResult) {
     WifiInfo info = moWiFi.getConnectionInfo();
 
@@ -1180,7 +1352,8 @@ public class WifiIotPlugin
     poResult.success(stringip);
   }
 
-  /// This method will remove the WiFi network as per the passed SSID from the device list
+  /// This method will remove the WiFi network as per the passed SSID from the
+  /// device list
   private void removeWifiNetwork(MethodCall poCall, Result poResult) {
     String prefix_ssid = poCall.argument("ssid");
     if (prefix_ssid.equals("")) {
@@ -1191,7 +1364,7 @@ public class WifiIotPlugin
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
       List<android.net.wifi.WifiConfiguration> mWifiConfigList = moWiFi.getConfiguredNetworks();
       for (android.net.wifi.WifiConfiguration wifiConfig : mWifiConfigList) {
-        String comparableSSID = ('"' + prefix_ssid); //Add quotes because wifiConfig.SSID has them
+        String comparableSSID = ('"' + prefix_ssid); // Add quotes because wifiConfig.SSID has them
         if (wifiConfig.SSID.startsWith(comparableSSID)) {
           moWiFi.removeNetwork(wifiConfig.networkId);
           moWiFi.saveConfiguration();
@@ -1217,13 +1390,14 @@ public class WifiIotPlugin
     poResult.success(removed);
   }
 
-  /// This method will remove the WiFi network as per the passed SSID from the device list
+  /// This method will remove the WiFi network as per the passed SSID from the
+  /// device list
   private void isRegisteredWifiNetwork(MethodCall poCall, Result poResult) {
 
     String ssid = poCall.argument("ssid");
 
     List<android.net.wifi.WifiConfiguration> mWifiConfigList = moWiFi.getConfiguredNetworks();
-    String comparableSSID = ('"' + ssid + '"'); //Add quotes because wifiConfig.SSID has them
+    String comparableSSID = ('"' + ssid + '"'); // Add quotes because wifiConfig.SSID has them
     if (mWifiConfigList != null) {
       for (android.net.wifi.WifiConfiguration wifiConfig : mWifiConfigList) {
         if (wifiConfig.SSID.equals(comparableSSID)) {
@@ -1265,8 +1439,7 @@ public class WifiIotPlugin
       final Integer timeoutInSeconds) {
     final Handler handler = new Handler(Looper.getMainLooper());
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-      final boolean connected =
-          connectToDeprecated(ssid, bssid, password, security, joinOnce, isHidden);
+      final boolean connected = connectToDeprecated(ssid, bssid, password, security, joinOnce, isHidden);
       handler.post(
           new Runnable() {
             @Override
@@ -1282,7 +1455,8 @@ public class WifiIotPlugin
               @Override
               public void run() {
                 poResult.error(
-                    "Error", "WEP is not supported for Android SDK " + Build.VERSION.SDK_INT, "");
+                    "WEP_NOT_SUPPORTED", "WEP is not supported for Android SDK " + Build.VERSION.SDK_INT,
+                    "WEP_SECURITY");
               }
             });
         return;
@@ -1301,7 +1475,7 @@ public class WifiIotPlugin
                 new Runnable() {
                   @Override
                   public void run() {
-                    poResult.error("Error", "Invalid BSSID representation", "");
+                    poResult.error("INVALID_BSSID", "Invalid BSSID representation", bssid);
                   }
                 });
             return;
@@ -1319,7 +1493,7 @@ public class WifiIotPlugin
           moWiFi.removeNetworkSuggestions(networkSuggestions);
         }
 
-        //builder.setIsAppInteractionRequired(true);
+        // builder.setIsAppInteractionRequired(true);
         final WifiNetworkSuggestion suggestion = builder.build();
 
         networkSuggestions = new ArrayList<>();
@@ -1329,13 +1503,44 @@ public class WifiIotPlugin
         }
 
         final int status = moWiFi.addNetworkSuggestions(networkSuggestions);
-        Log.e(WifiIotPlugin.class.getSimpleName(), "status: " + status);
+        Log.d(WifiIotPlugin.class.getSimpleName(), "Network suggestion status: " + status);
 
         handler.post(
             new Runnable() {
               @Override
               public void run() {
-                poResult.success(status == WifiManager.STATUS_NETWORK_SUGGESTIONS_SUCCESS);
+                if (status == WifiManager.STATUS_NETWORK_SUGGESTIONS_SUCCESS) {
+                  poResult.success(true);
+                } else {
+                  String errorMessage = "Network suggestion failed";
+                  String errorCode = "NETWORK_SUGGESTION_FAILED";
+                  String errorDetails = "Status code: " + status;
+
+                  switch (status) {
+                    case WifiManager.STATUS_NETWORK_SUGGESTIONS_ERROR_ADD_DUPLICATE:
+                      errorMessage = "Duplicate network suggestion";
+                      errorDetails = "Network already suggested";
+                      break;
+                    case WifiManager.STATUS_NETWORK_SUGGESTIONS_ERROR_ADD_EXCEEDS_MAX_PER_APP:
+                      errorMessage = "Too many network suggestions";
+                      errorDetails = "Exceeded maximum suggestions per app";
+                      break;
+                    case WifiManager.STATUS_NETWORK_SUGGESTIONS_ERROR_INTERNAL:
+                      errorMessage = "Internal error";
+                      errorDetails = "System internal error occurred";
+                      break;
+                    case WifiManager.STATUS_NETWORK_SUGGESTIONS_ERROR_APP_DISALLOWED:
+                      errorMessage = "App not allowed to suggest networks";
+                      errorDetails = "Permission denied or app restricted";
+                      break;
+                    case WifiManager.STATUS_NETWORK_SUGGESTIONS_ERROR_ADD_INVALID:
+                      errorMessage = "Invalid network suggestion";
+                      errorDetails = "Network configuration is invalid";
+                      break;
+                  }
+
+                  poResult.error(errorCode, errorMessage, errorDetails);
+                }
               }
             });
       } else {
@@ -1351,7 +1556,7 @@ public class WifiIotPlugin
                 new Runnable() {
                   @Override
                   public void run() {
-                    poResult.error("Error", "Invalid BSSID representation", "");
+                    poResult.error("INVALID_BSSID", "Invalid BSSID representation", bssid);
                   }
                 });
             return;
@@ -1364,52 +1569,58 @@ public class WifiIotPlugin
           builder.setWpa2Passphrase(password);
         }
 
-        final NetworkRequest networkRequest =
-            new NetworkRequest.Builder()
-                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                .setNetworkSpecifier(builder.build())
-                .build();
+        final NetworkRequest networkRequest = new NetworkRequest.Builder()
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .setNetworkSpecifier(builder.build())
+            .build();
 
-        final ConnectivityManager connectivityManager =
-            (ConnectivityManager) moContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        final ConnectivityManager connectivityManager = (ConnectivityManager) moContext
+            .getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        if (networkCallback != null) connectivityManager.unregisterNetworkCallback(networkCallback);
+        if (networkCallback != null)
+          connectivityManager.unregisterNetworkCallback(networkCallback);
 
-        networkCallback =
-            new ConnectivityManager.NetworkCallback() {
-              boolean resultSent = false;
+        networkCallback = new ConnectivityManager.NetworkCallback() {
+          boolean resultSent = false;
 
-              @Override
-              public void onAvailable(@NonNull Network network) {
-                super.onAvailable(network);
-                if (!resultSent) {
-                  joinedNetwork = network;
-                  poResult.success(true);
-                  resultSent = true;
-                }
-              }
+          @Override
+          public void onAvailable(@NonNull Network network) {
+            super.onAvailable(network);
+            if (!resultSent) {
+              joinedNetwork = network;
+              poResult.success(true);
+              resultSent = true;
+            }
+          }
 
-              @Override
-              public void onUnavailable() {
-                super.onUnavailable();
-                if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-                  connectivityManager.unregisterNetworkCallback(this);
-                }
-                if (!resultSent) {
-                  poResult.success(false);
-                  resultSent = true;
-                }
-              }
+          @Override
+          public void onUnavailable() {
+            super.onUnavailable();
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+              connectivityManager.unregisterNetworkCallback(this);
+            }
+            if (!resultSent) {
+              poResult.error("NETWORK_UNAVAILABLE", "Network unavailable or connection timeout",
+                  "Timeout: " + timeoutInSeconds + " seconds");
+              resultSent = true;
+              Log.d(WifiIotPlugin.class.getSimpleName(), "Network unavailable");
+            }
+          }
 
-              @Override
-              public void onLost(Network network) {
-                super.onLost(network);
-                if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-                  connectivityManager.unregisterNetworkCallback(this);
-                }
-              }
-            };
+          @Override
+          public void onLost(Network network) {
+            super.onLost(network);
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+              connectivityManager.unregisterNetworkCallback(this);
+            }
+            if (!resultSent) {
+              poResult.error("NETWORK_LOST", "Network connection lost", "Network disconnected unexpectedly");
+              resultSent = true;
+              Log.d(WifiIotPlugin.class.getSimpleName(), "Network connection lost");
+            }
+          }
+        };
 
         connectivityManager.requestNetwork(
             networkRequest, networkCallback, handler, timeoutInSeconds * 1000);
@@ -1461,8 +1672,10 @@ public class WifiIotPlugin
       conf.BSSID = bssid;
     }
 
-    if (security != null) security = security.toUpperCase();
-    else security = "NONE";
+    if (security != null)
+      security = security.toUpperCase();
+    else
+      security = "NONE";
 
     if (security.toUpperCase().equals("WPA")) {
 
@@ -1507,8 +1720,7 @@ public class WifiIotPlugin
       Boolean joinOnce,
       Boolean isHidden) {
     /// Make new configuration
-    android.net.wifi.WifiConfiguration conf =
-        generateConfiguration(ssid, bssid, password, security, isHidden);
+    android.net.wifi.WifiConfiguration conf = generateConfiguration(ssid, bssid, password, security, isHidden);
 
     int updateNetwork = registerWifiNetworkDeprecated(conf);
 
@@ -1526,7 +1738,8 @@ public class WifiIotPlugin
     }
 
     boolean enabled = moWiFi.enableNetwork(updateNetwork, true);
-    if (!enabled) return false;
+    if (!enabled)
+      return false;
 
     boolean connected = false;
     for (int i = 0; i < 20; i++) {
