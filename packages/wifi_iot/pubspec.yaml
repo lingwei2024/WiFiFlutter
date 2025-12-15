@@ -13,7 +13,7 @@ flutter:
       ios:
         pluginClass: WifiIotPlugin
       ohos:
-        package: ets.components.plugin
+        package: com.alternadom.wifiiot
         pluginClass: WifiIotPlugin
 
 environment:
