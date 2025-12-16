@@ -1,0 +1,52 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "/Users/lingwei/.ohos/config/default_ohos_K5vxKD3rn1ahVAmBiyaudE4v6iwrrWNRIgUw-aoIAb8=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001AAE07DE7C89124189A44ECDBDFF0437C256A11D206BEA9EC81A89A28E5C0AFAAB5EE22B8E8EC1",
+          "profile": "/Users/lingwei/.ohos/config/default_ohos_K5vxKD3rn1ahVAmBiyaudE4v6iwrrWNRIgUw-aoIAb8=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "/Users/lingwei/.ohos/config/default_ohos_K5vxKD3rn1ahVAmBiyaudE4v6iwrrWNRIgUw-aoIAb8=.p12",
+          "storePassword": "0000001AC49C6AD82D8833BB3EBAD202DA0ED34BF4646654E6321685A80C254091FA971DDAC7F77B4A5F"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "compatibleSdkVersion": "5.0.0(12)",
+        "runtimeOS": "HarmonyOS",
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug"
+      },
+      {
+        "name": "profile"
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}
