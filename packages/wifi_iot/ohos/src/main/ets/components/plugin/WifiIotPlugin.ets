@@ -50,6 +50,7 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
 
   async onMethodCall(call: MethodCall, result: MethodResult): Promise<void> {
     try {
+      console.log(".............................收到指令:" + call.method);
       switch (call.method) {
         case 'getPlatformVersion':
           result.success('HarmonyOS');
@@ -61,17 +62,17 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
           break;
 
         case 'setEnabled':
-          const setEnabledResult = await this.setEnabled(call.args);
+          const setEnabledResult = await this.setEnabled(call);
           result.success(setEnabledResult);
           break;
 
         case 'connect':
-          const connectResult = await this.connect(call.args);
+          const connectResult = await this.connect(call);
           result.success(connectResult);
           break;
 
         case 'connectWithResult':
-          const connectWithResult = await this.connectWithResult(call.args);
+          const connectWithResult = await this.connectWithResult(call);
           result.success(connectWithResult);
           break;
 
@@ -111,7 +112,7 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
           break;
 
         case 'forceWifiUsage':
-          const forceWifiResult = await this.forceWifiUsage(call.args);
+          const forceWifiResult = await this.forceWifiUsage(call);
           result.success(forceWifiResult);
           break;
 
@@ -126,17 +127,17 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
           break;
 
         case 'removeWifiNetwork':
-          const removeResult = await this.removeWifiNetwork(call.args);
+          const removeResult = await this.removeWifiNetwork(call);
           result.success(removeResult);
           break;
 
         case 'isRegisteredWifiNetwork':
-          const isRegistered = await this.isRegisteredWifiNetwork(call.args);
+          const isRegistered = await this.isRegisteredWifiNetwork(call);
           result.success(isRegistered);
           break;
 
         case 'registerWifiNetwork':
-          const registerResult = await this.registerWifiNetwork(call.args);
+          const registerResult = await this.registerWifiNetwork(call);
           result.success(registerResult);
           break;
 
@@ -179,9 +180,10 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
-  private async setEnabled(params: Record<string, Any>): Promise<boolean> {
+  private async setEnabled(call: MethodCall): Promise<boolean> {
     try {
-      const state = params['state'] as boolean;
+      const state = call.argument('state') as boolean;
+      const shouldOpenSettings = call.argument('shouldOpenSettings') as boolean;
       if (state) {
         await wifiManager.enableWifi();
       } else {
@@ -194,14 +196,14 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
-  private async connect(params: Record<string, Any>): Promise<boolean> {
+  private async connect(call: MethodCall): Promise<boolean> {
     try {
-      const ssid = params['ssid'] as string;
-      const bssid = params['bssid'] as string | undefined;
-      const password = params['password'] as string | undefined;
-      const security = params['security'] as string;
-      const isHidden = params['is_hidden'] as boolean || false;
-
+      const ssid = call.argument('ssid') as string;
+      const bssid = call.argument('bssid') as string | undefined;
+      const password = call.argument('password') as string | undefined;
+      const security = call.argument('security') as string;
+      const isHidden = call.argument('is_hidden') as boolean || false;
+      console.log(".............................. 连接网络：" + ssid);
       // 验证SSID
       if (!ssid || ssid.length === 0) {
         return false;
@@ -231,9 +233,9 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
-  private async connectWithResult(params: Record<string, Any>): Promise<ConnectResult> {
+  private async connectWithResult(call: MethodCall): Promise<ConnectResult> {
     try {
-      const success = await this.connect(params);
+      const success = await this.connect(call);
 
       if (success) {
         return {
@@ -332,10 +334,10 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
   }
 
 
-  private async forceWifiUsage(params: Record<string, Any>): Promise<boolean> {
+  private async forceWifiUsage(call: MethodCall): Promise<boolean> {
     // HarmonyOS中网络路由由系统管理
     // 这里可以记录使用偏好或进行提示
-    const useWifi = params['useWifi'] as boolean;
+    const useWifi = call.argument('useWifi') as boolean;
     console.log('forceWifiUsage:', useWifi);
     return true;
   }
@@ -367,9 +369,9 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
     return await this.scanWifiNetworks();
   }
 
-  private async removeWifiNetwork(params: Record<string, Any>): Promise<boolean> {
+  private async removeWifiNetwork(call: MethodCall): Promise<boolean> {
     try {
-      const ssid = params['ssid'] as string;
+      const ssid = call.argument('ssid') as string;
       const configs = await wifiManager.getDeviceConfigs();
       const targetConfig = configs.find(config => config.ssid === ssid);
       if (targetConfig && targetConfig.ssid !== undefined) {
@@ -386,9 +388,9 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
   }
 
 
-  private async isRegisteredWifiNetwork(params: Record<string, Any>): Promise<boolean> {
+  private async isRegisteredWifiNetwork(call: MethodCall): Promise<boolean> {
     try {
-      const ssid = params['ssid'] as string;
+      const ssid = call.argument('ssid') as string;
       const configs = await wifiManager.getDeviceConfigs();
       return configs.some(config => config.ssid === ssid);
     } catch (error) {
@@ -397,13 +399,13 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
-  private async registerWifiNetwork(params: Record<string, Any>): Promise<boolean> {
+  private async registerWifiNetwork(call: MethodCall): Promise<boolean> {
     try {
-      const ssid = params['ssid'] as string;
-      const bssid = params['bssid'] as string | undefined;
-      const password = params['password'] as string | undefined;
-      const security = params['security'] as string;
-      const isHidden = params['is_hidden'] as boolean || false;
+      const ssid = call.argument('ssid') as string;
+      const bssid = call.argument('bssid') as string | undefined;
+      const password = call.argument('password') as string | undefined;
+      const security = call.argument('security') as string;
+      const isHidden = call.argument('is_hidden') as boolean || false;
 
       const securityType = this.mapSecurityType(security);
 
