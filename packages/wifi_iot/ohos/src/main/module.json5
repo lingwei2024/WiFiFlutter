@@ -5,6 +5,19 @@
     "deviceTypes": [
       "default",
       "tablet"
+    ],
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.SET_WIFI_INFO"
+      },
+      {
+        "name": "ohos.permission.GET_WIFI_INFO"
+      },
+      {
+        "name" :  "ohos.permission.LOCATION",
+        "reason":"$string:permission_location_note",
+        "usedScene": {"abilities": [],"when": "inuse"}}
     ]
   }
 }
+

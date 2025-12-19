@@ -441,7 +441,7 @@ class WiFiForIoTPlugin {
     final Map<String, bool> htArguments = Map();
     htArguments["state"] = state;
     htArguments["shouldOpenSettings"] = shouldOpenSettings;
-
+    print("setEnabled: $state, shouldOpenSettings: $shouldOpenSettings");
     try {
       await _channel.invokeMethod('setEnabled', htArguments);
     } on MissingPluginException catch (e) {

@@ -9,6 +9,7 @@ import {
 } from '@ohos/flutter_ohos';
 
 import wifiManager from '@ohos.wifiManager';
+import { Callback } from '@kit.BasicServicesKit';
 
 interface ConnectResult {
   success: boolean;
@@ -67,15 +68,13 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
           break;
 
         case 'connect':
-          const connectResult = await this.connect(call);
-          result.success(connectResult);
+          this.connect(call, (success) => {
+            result.success(success);
+          });
           break;
-
         case 'connectWithResult':
-          const connectWithResult = await this.connectWithResult(call);
-          result.success(connectWithResult);
+          this.connectWithResult(call, result);
           break;
-
         case 'isConnected':
           const isConnected = await this.isConnected();
           result.success(isConnected);
@@ -196,70 +195,67 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
-  private async connect(call: MethodCall): Promise<boolean> {
+  private async connect(call: MethodCall, callBack:Callback<boolean>) {
     try {
       const ssid = call.argument('ssid') as string;
       const bssid = call.argument('bssid') as string | undefined;
       const password = call.argument('password') as string | undefined;
       const security = call.argument('security') as string;
       const isHidden = call.argument('is_hidden') as boolean || false;
-      console.log(".............................. 连接网络：" + ssid);
+      console.log(".............................. 连接网络：" + ssid + "bssid:" + bssid + "password:" + password + "security:" + security + "is_hidden" + isHidden);
       // 验证SSID
       if (!ssid || ssid.length === 0) {
-        return false;
+        callBack(false)
       }
-
       // 映射安全类型
       const securityType = this.mapSecurityType(security);
       const wifiConfig: wifiManager.WifiDeviceConfig = {
         ssid: ssid,
-        bssid: bssid,
         preSharedKey: password ?? '',
-        securityType: securityType,
-        isHiddenSsid: isHidden
+        securityType: securityType
       };
-
-      const netWorkId = await wifiManager.addDeviceConfig(wifiConfig);
-      if (netWorkId < 0) {
-        return false;
-      }
-
-      wifiManager.connectToNetwork(netWorkId);
-
-      return true;
+      console.log(".................................. 11111 " + JSON.stringify(wifiConfig))
+      wifiManager.addCandidateConfig(wifiConfig).then(result => {
+        console.log('addCandidateConfig:' + result)
+        wifiManager.connectToCandidateConfig(result);
+        callBack(true)
+      }).catch((err: number) => {
+        console.error("connectToCandidateConfig failed:" + err);
+        callBack(false)
+      });
     } catch (error) {
       console.error('connect error:', JSON.stringify(error));
-      return false;
+      callBack(false)
     }
   }
 
-  private async connectWithResult(call: MethodCall): Promise<ConnectResult> {
+  private async connectWithResult(call: MethodCall, result:MethodResult) {
     try {
-      const success = await this.connect(call);
-
-      if (success) {
-        return {
-          success: true,
-          errorCode: 0, // SUCCESS
-          errorMessage: null,
-          errorDetails: null
-        };
-      } else {
-        return {
-          success: false,
-          errorCode: 8, // CONNECTION_TIMEOUT
-          errorMessage: 'Connection failed',
-          errorDetails: null
-        };
-      }
+      this.connect(call, (success) => {
+        if (success) {
+          result.success({
+            success: true,
+            errorCode: 0, // SUCCESS
+            errorMessage: null,
+            errorDetails: null
+          });
+        } else {
+          result.success({
+            success: false,
+            errorCode: 8, // CONNECTION_TIMEOUT
+            errorMessage: 'Connection failed',
+            errorDetails: null
+          });
+        }
+      });
     } catch (error) {
       console.error('connectWithResult error:', JSON.stringify(error));
-      return {
+      result.success({
         success: false,
-        errorCode: 1, // UNKNOWN_ERROR
+        errorCode: 1, // CONNECTION_TIMEOUT
         errorMessage: error.message,
         errorDetails: JSON.stringify(error)
-      };
+      });
     }
   }
 
@@ -455,7 +451,7 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
   private mapSecurityType(security: string): wifiManager.WifiSecurityType {
     switch (security) {
       case 'WPA':
-        return wifiManager.WifiSecurityType.WIFI_SEC_TYPE_WAPI_PSK;
+        return wifiManager.WifiSecurityType.WIFI_SEC_TYPE_PSK;
       case 'WEP':
         return wifiManager.WifiSecurityType.WIFI_SEC_TYPE_WEP;
       case 'NONE':
