@@ -215,9 +215,19 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
         securityType: securityType
       };
       console.log(".................................. 11111 " + JSON.stringify(wifiConfig))
-      wifiManager.addCandidateConfig(wifiConfig).then(result => {
+      wifiManager.addCandidateConfig(wifiConfig).then(async result => {
         console.log('addCandidateConfig:' + result)
-        wifiManager.connectToCandidateConfig(result);
+        try{
+          await wifiManager.connectToCandidateConfigWithUserAction(result);
+        }catch (err) {
+          const error = err as BusinessError;
+          if(error.code == 2501006 || error.code == 2501001){
+            callBack(false)
+            console.log("............. 连接失败 " + ssid + "   " + error.code)
+            return
+          }
+        }
+        console.log("............. 连接成功 " + ssid)
         callBack(true)
       }).catch((err: number) => {
         console.error("connectToCandidateConfig failed:" + err);
