@@ -214,11 +214,14 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
         preSharedKey: password ?? '',
         securityType: securityType
       };
-      console.log(".................................. 11111 " + JSON.stringify(wifiConfig))
       wifiManager.addCandidateConfig(wifiConfig).then(async result => {
         console.log('addCandidateConfig:' + result)
         try{
-          await wifiManager.connectToCandidateConfigWithUserAction(result);
+          if (typeof wifiManager.connectToCandidateConfigWithUserAction === 'function') {
+            await wifiManager.connectToCandidateConfigWithUserAction(result)
+          } else {
+            await wifiManager.connectToCandidateConfig(result)
+          }
         }catch (err) {
           const error = err as BusinessError;
           if(error.code == 2501006 || error.code == 2501001){
