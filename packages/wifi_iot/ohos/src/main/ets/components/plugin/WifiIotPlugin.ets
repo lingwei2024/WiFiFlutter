@@ -232,8 +232,9 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
             return
           }
         }
-        console.log("............. 连接成功 " + ssid)
-        callBack(true)
+        const isconnectSucc = await this.waitForWifiConnected(ssid);
+        console.log("............. 连接成功 " + ssid + " :" + isconnectSucc)
+        callBack(isconnectSucc)
       }).catch((err: number) => {
         console.error("connectToCandidateConfig failed:" + err);
         callBack(false)
@@ -242,6 +243,25 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
       console.error('connect error:', JSON.stringify(error));
       callBack(false)
     }
+  }
+
+  private async waitForWifiConnected(targetSsid: string, timeoutMs = 20000): Promise<boolean> {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      const info = await wifiManager.getLinkedInfo();
+      if (info?.ssid) {
+        const currentSsid = info.ssid.replace(/^"|"$/g, '');
+        if (currentSsid === targetSsid) {
+          return true;
+        }
+      }
+      await new Promise<void>((resolve) => {
+        setTimeout(() => {
+          resolve();
+        }, 500);
+      });
+    }
+    return false;
   }
 
   private async connectWithResult(call: MethodCall, result:MethodResult) {
