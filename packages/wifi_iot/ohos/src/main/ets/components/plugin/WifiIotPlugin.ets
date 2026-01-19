@@ -217,7 +217,6 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
         isHiddenSsid: isHidden,
       };
       wifiManager.addCandidateConfig(wifiConfig).then(async result => {
-        console.log('addCandidateConfig:' + result)
         try{
           if (typeof wifiManager.connectToCandidateConfigWithUserAction === 'function') {
             await wifiManager.connectToCandidateConfigWithUserAction(result)
@@ -245,14 +244,20 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
-  private async waitForWifiConnected(targetSsid: string, timeoutMs = 20000): Promise<boolean> {
+  private async waitForWifiConnected(targetSsid: string, timeoutMs = 10000): Promise<boolean> {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
       const info = await wifiManager.getLinkedInfo();
-      if (info?.ssid) {
+      if (info) {
+        const state = info.connState;
+        console.info("...........ssid:" + info.ssid + " connState:" + info.connState.toString())
         const currentSsid = info.ssid.replace(/^"|"$/g, '');
         if (currentSsid === targetSsid) {
-          return true;
+          if (state === wifiManager.ConnState.CONNECTED) {
+              return true
+          } else if (state === wifiManager.ConnState.DISCONNECTED) {
+            return false;
+          }
         }
       }
       await new Promise<void>((resolve) => {
