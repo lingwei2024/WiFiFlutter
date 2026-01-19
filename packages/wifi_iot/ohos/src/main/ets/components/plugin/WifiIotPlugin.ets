@@ -202,7 +202,6 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
       const password = call.argument('password') as string | undefined;
       const security = call.argument('security') as string;
       const isHidden = call.argument('is_hidden') as boolean || false;
-      console.log(".............................. 连接网络：" + ssid + "bssid:" + bssid + "password:" + password + "security:" + security + "is_hidden" + isHidden);
       // 验证SSID
       if (!ssid || ssid.length === 0) {
         callBack(false)
@@ -211,8 +210,11 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
       const securityType = this.mapSecurityType(security);
       const wifiConfig: wifiManager.WifiDeviceConfig = {
         ssid: ssid,
+        bssid: bssid && bssid.length > 0 ? bssid : '',
+        bssidType: 0,
         preSharedKey: password ?? '',
-        securityType: securityType
+        securityType: securityType,
+        isHiddenSsid: isHidden,
       };
       wifiManager.addCandidateConfig(wifiConfig).then(async result => {
         console.log('addCandidateConfig:' + result)
@@ -421,6 +423,7 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
       const wifiConfig: wifiManager.WifiDeviceConfig = {
         ssid: ssid,
         bssid: bssid,
+        bssidType: 0,
         preSharedKey: password ?? '',
         securityType: securityType,
         isHiddenSsid: isHidden
