@@ -11,13 +11,6 @@ import {
 import wifiManager from '@ohos.wifiManager';
 import { Callback } from '@kit.BasicServicesKit';
 
-interface ConnectResult {
-  success: boolean;
-  errorCode: number;
-  errorMessage: string | null;
-  errorDetails: string | null;
-}
-
 interface WifiNetwork {
   ssid: string;
   bssid: string;
@@ -30,7 +23,7 @@ interface WifiNetwork {
 /** WifiIotPlugin **/
 export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
   private channel: MethodChannel | null = null;
-
+  private isCancelConnect = false
   constructor() {
   }
 
@@ -231,9 +224,13 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
             return
           }
         }
+        this.isCancelConnect = false;
         const isconnectSucc = await this.waitForWifiConnected(ssid);
         console.log("............. 连接成功 " + ssid + " :" + isconnectSucc)
-        callBack(isconnectSucc)
+        if(this.isCancelConnect == false){
+          //没有被取消
+          callBack(isconnectSucc)
+        }
       }).catch((err: number) => {
         console.error("connectToCandidateConfig failed:" + err);
         callBack(false)
@@ -244,13 +241,15 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
-  private async waitForWifiConnected(targetSsid: string, timeoutMs = 10000): Promise<boolean> {
+  private async waitForWifiConnected(targetSsid: string, timeoutMs = 15000): Promise<boolean> {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
+      if(this.isCancelConnect){
+        return false;
+      }
       const info = await wifiManager.getLinkedInfo();
       if (info) {
         const state = info.connState;
-        console.info("...........ssid:" + info.ssid + " connState:" + info.connState.toString())
         const currentSsid = info.ssid.replace(/^"|"$/g, '');
         if (currentSsid === targetSsid) {
           if (state === wifiManager.ConnState.CONNECTED) {
@@ -259,6 +258,9 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
             return false;
           }
         }
+      }
+      if(this.isCancelConnect){
+        return false;
       }
       await new Promise<void>((resolve) => {
         setTimeout(() => {
@@ -311,6 +313,7 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
 
   private async disconnect(): Promise<boolean> {
     try {
+      this.isCancelConnect = true;
       wifiManager.disconnect();
       return true;
     } catch (error) {
