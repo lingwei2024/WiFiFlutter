@@ -314,7 +314,15 @@ export default class WifiIotPlugin implements FlutterPlugin, MethodCallHandler {
   private async disconnect(): Promise<boolean> {
     try {
       this.isCancelConnect = true;
-      wifiManager.disconnect();
+      const candidates = wifiManager.getCandidateConfigs();
+      for (const config of candidates) {
+        try {
+          const networkId = await wifiManager.addCandidateConfig(config);
+          await wifiManager.removeCandidateConfig(networkId);
+        } catch (e) {
+          console.error('removeCandidateConfig error:', JSON.stringify(e));
+        }
+      }
       return true;
     } catch (error) {
       console.error('disconnect error:', JSON.stringify(error));
